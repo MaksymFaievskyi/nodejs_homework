@@ -1,0 +1,43 @@
+.modal-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(128, 128, 128, 0.6);
+}
+
+.modal-root {
+  display: flex;
+  flex-direction: column;
+  border: 5px solid #ca9650;
+  background-color: #ffdfa7;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  padding: 1rem;
+  border-bottom: 3px solid #ca9650;
+  font-weight: 700;
+  font-size: 22px;
+  color: #ba0303;
+}
+
+.modal-body {
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
