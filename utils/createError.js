@@ -17,6 +17,7 @@ const validationErrors = {
     invalidPhoneFormat: () => createError('Phone must be in format +380xxxxxxxxx'),
     invalidPasswordFormat: () => createError('Password must be at least 4 characters long'),
     invalidName: (name) => createError(`${name} must be a string with at least 2 characters`),
+    invalidLog: () => createError('Log must be an array if provided'),
     invalidPowerRange: () => createError('Power must be a number between 1 and 100'),
     invalidDefenseRange: () => createError('Defense must be a number between 1 and 10'),
     invalidHealthRange: () => createError('Health must be a number between 80 and 120')
@@ -25,6 +26,7 @@ const validationErrors = {
 // Common database-related errors
 const databaseErrors = {
     notFound: (entity) => createError(`${entity} not found`),
+    sameFighter: () => createError('Fighters must be different'),
     duplicateEmail: () => createError('User with this email already exists'),
     duplicatePhone: () => createError('User with this phone already exists'),
     duplicateName: () => createError('Fighter with this name already exists')
