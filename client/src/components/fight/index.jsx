@@ -1,9 +1,14 @@
 import React from "react";
 import { getFighters } from "../../services/domainRequest/fightersRequest";
+import {
+  createFight,
+  updateFight,
+} from "../../services/domainRequest/fightRequest"; // Import fight API functions
 import NewFighter from "../newFighter";
 import Fighter from "../fighter";
 import FightArena from "../fightArena";
-import WinnerModal from "../winnerModal"; // Додано імпорт
+import WinnerModal from "../winnerModal";
+import FightHistory from "../fightHistory";
 import { Button } from "@material-ui/core";
 import "./fight.css";
 
@@ -13,7 +18,9 @@ class Fight extends React.Component {
     fighter1: null,
     fighter2: null,
     isFighting: false,
-    winner: null, // Додано новий стан
+    winner: null,
+    showHistory: false,
+    currentFightId: null,
   };
 
   async componentDidMount() {
@@ -23,22 +30,62 @@ class Fight extends React.Component {
     }
   }
 
-  onFightStart = () => {
+  onFightStart = async () => {
     const { fighter1, fighter2 } = this.state;
     if (fighter1 && fighter2) {
-      this.setState({ isFighting: true });
+      try {
+        const fightData = {
+          fighter1: fighter1.id,
+          fighter2: fighter2.id,
+          log: [],
+        };
+
+        const response = await createFight(fightData);
+        if (response && response.id) {
+          this.setState({
+            isFighting: true,
+            currentFightId: response.id,
+          });
+        } else {
+          console.error("Failed to create fight record");
+          this.setState({ isFighting: true });
+        }
+      } catch (error) {
+        console.error("Error creating fight record:", error);
+        this.setState({ isFighting: true });
+      }
     }
   };
 
-  onFightEnd = (winner) => {
-    this.setState({
-      isFighting: false,
-      winner, // Зберігаємо переможця в стані
-    });
+  onFightEnd = async (winner, fightLog) => {
+    try {
+      const updatedFight = await updateFight(this.state.currentFightId, {
+        log: fightLog,
+        winner: winner,
+      });
+
+      this.setState({
+        isFighting: false,
+        winner,
+        currentFight: updatedFight,
+      });
+    } catch (error) {
+      console.error("Failed to update fight:", error);
+      this.setState({
+        isFighting: false,
+        error: "Failed to save fight results",
+      });
+    }
   };
 
   handleCloseModal = () => {
-    this.setState({ winner: null }); // Скидаємо переможця
+    this.setState({ winner: null });
+  };
+
+  toggleHistory = () => {
+    this.setState((prevState) => ({
+      showHistory: !prevState.showHistory,
+    }));
   };
 
   onCreate = (fighter) => {
@@ -58,7 +105,6 @@ class Fight extends React.Component {
     if (!fighter2) {
       return fighters;
     }
-
     return fighters.filter((it) => it.id !== fighter2.id);
   };
 
@@ -67,14 +113,12 @@ class Fight extends React.Component {
     if (!fighter1) {
       return fighters;
     }
-
     return fighters.filter((it) => it.id !== fighter1.id);
   };
 
   render() {
-    const { fighter1, fighter2, isFighting } = this.state;
+    const { fighter1, fighter2, isFighting, showHistory } = this.state;
 
-    // If we're fighting, render the FightArena instead of the fighter selection
     if (isFighting && fighter1 && fighter2) {
       return (
         <FightArena
@@ -85,10 +129,12 @@ class Fight extends React.Component {
       );
     }
 
-    // Otherwise render the fighter selection screen
     return (
       <div id="wrapper">
-        <NewFighter onCreated={this.onCreate} />
+        <div className="header-actions">
+          <NewFighter onCreated={this.onCreate} />
+        </div>
+
         <div id="figh-wrapper">
           <Fighter
             selectedFighter={fighter1}
@@ -111,6 +157,19 @@ class Fight extends React.Component {
             fightersList={this.getFighter2List() || []}
           />
         </div>
+
+        <div className="history-section">
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={this.toggleHistory}
+          >
+            {showHistory ? "Hide History" : "Show Fight History"}
+          </Button>
+
+          {showHistory && <FightHistory className="history-container" />}
+        </div>
+
         <WinnerModal
           fighter={this.state.winner}
           onClose={() => this.setState({ winner: null })}

@@ -1,5 +1,6 @@
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-param-reassign */
+/* eslint-disable no-unused-expressions */
 import controls from '../constants/controls';
 
 // Constants
@@ -9,27 +10,21 @@ const DAMAGE_INDICATOR_DURATION = 1000; // The time of displaying the damage ind
 
 export function getHitPower(fighter) {
     const criticalHitChance = Math.random() + 1;
-    console.log("Hit power " + fighter.power * criticalHitChance);
     return fighter.power * criticalHitChance;
 }
 
 export function getBlockPower(fighter) {
     const dodgeChance = Math.random() + 1;
-    console.log("Block Power " + fighter.defense * dodgeChance);
     return fighter.defense * dodgeChance;
 }
 
 export function getDamage(attacker, defender) {
     const hitPower = getHitPower(attacker);
     const blockPower = getBlockPower(defender);
-    console.log("Damage " + hitPower > blockPower ? hitPower - blockPower : 0);
     return hitPower > blockPower ? hitPower - blockPower : 0;
 }
 
-export async function fight(firstFighter, secondFighter) {
-    console.log(firstFighter);
-    console.log(secondFighter);
-
+export async function fight(firstFighter, secondFighter, { onDamage, onLog }) {
     return new Promise(resolve => {
         // Objects to track the state of fighters
         const fighters = {
@@ -58,6 +53,8 @@ export async function fight(firstFighter, secondFighter) {
                 healthBar: document.getElementById('right-fighter-indicator')
             }
         };
+
+        const log = [];
 
         const pressedKeys = new Set();
 
@@ -127,20 +124,26 @@ export async function fight(firstFighter, secondFighter) {
         const endFight = winner => {
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('keyup', handleKeyUp);
-            resolve(winner);
+            resolve(winner, log);
         };
 
         // Damage by one fighter to another
         const applyDamage = (attacker, defender, isCritical = false) => {
             if (defender.isBlocking && !isCritical) {
+                log.push(`${defender.fighter.name} ухилився від удару ${attacker.fighter.name}`);
+                onLog?.(`${defender.fighter.name} ухилився від удару ${attacker.fighter.name}`);
                 return; // Damage is blocked
             }
 
             let damage;
             if (isCritical) {
                 damage = CRITICAL_HIT_MULTIPLIER * attacker.fighter.power;
+                log.push(`${attacker.fighter.name} завдав критичний удар ${defender.fighter.name} на ${damage.toFixed(2)} шкоди`);
+                onLog?.(`${attacker.fighter.name} завдав критичний удар ${defender.fighter.name} на ${damage.toFixed(2)} шкоди`);
             } else {
                 damage = getDamage(attacker.fighter, defender.fighter);
+                log.push(`${attacker.fighter.name} завдав ${damage.toFixed(2)} шкоди ${defender.fighter.name}`);
+                onLog?.(`${attacker.fighter.name} завдав ${damage.toFixed(2)} шкоди ${defender.fighter.name}`);
             }
 
             defender.currentHealth = Math.max(0, defender.currentHealth - damage);
@@ -151,6 +154,8 @@ export async function fight(firstFighter, secondFighter) {
 
             // Checking if the fight is over
             if (defender.currentHealth <= 0) {
+                log.push(`${attacker.fighter.name} переміг!`);
+                onLog?.(`${attacker.fighter.name} переміг!`);
                 endFight(attacker.fighter);
             }
         };

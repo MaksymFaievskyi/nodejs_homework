@@ -15,6 +15,8 @@ const FightArena = ({ fighter1, fighter2, onFightEnd }) => {
 
   useEffect(() => {
     const handleFight = async () => {
+      const fightLog = [];
+
       const winner = await fight(fighter1, fighter2, {
         onDamage: (attacker, damage, isCritical) => {
           const target = attacker === "player1" ? "player2" : "player1";
@@ -34,9 +36,12 @@ const FightArena = ({ fighter1, fighter2, onFightEnd }) => {
             setDamageText((prev) => ({ ...prev, [target]: "" }));
           }, 1000);
         },
+        onLog: (message) => {
+          fightLog.push(message);
+        },
       });
 
-      onFightEnd(winner);
+      onFightEnd(winner, fightLog);
     };
 
     if (fighter1 && fighter2) handleFight();

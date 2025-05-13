@@ -40,6 +40,31 @@ class FightService {
     return fight;
   }
 
+  // Update fight
+  updateFight(id, { log, winner }) {
+    const fightToUpdate = fightRepository.getOne({ id });
+
+    if (!fightToUpdate) return null;
+
+    if (fightToUpdate.winner) {
+      throw databaseErrors.updateFinishedFight();
+    }
+
+    if (log) {
+      fightToUpdate.log = [...fightToUpdate.log, ...log];
+    }
+
+    if (winner) {
+      if (winner.id !== fightToUpdate.fighter1 && winner.id !== fightToUpdate.fighter2) {
+        return databaseErrors.invalidWinner();
+      }
+      fightToUpdate.winner = winner;
+    }
+
+    const updatedFight = fightRepository.update(id, fightToUpdate);
+    return updatedFight;
+  }
+
   // Delete fight
   deleteFight(id) {
     const fightToDelete = fightRepository.getOne({ id });

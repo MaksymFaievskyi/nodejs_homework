@@ -2,6 +2,7 @@ const FIGHT = {
   id: "",
   fighter1: "id",
   fighter2: "id",
+  winner: null,
   log: [
     // {
     //     "fighter1Shot": 0,

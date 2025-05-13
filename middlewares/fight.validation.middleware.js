@@ -55,4 +55,33 @@ const createFightValid = (req, res, next) => {
     next();
 };
 
-export { createFightValid };
+const updateFightValid = (req, res, next) => {
+    const { id, log, winner } = req.body;
+
+    if (id) {
+        req.context.validationError = validationErrors.idInBody();
+        return next();
+    }
+
+    const allowedFields = ['log', 'winner'];
+    const extraFields = Object.keys(req.body).filter(field => !allowedFields.includes(field));
+
+    if (extraFields.length > 0) {
+        req.context.validationError = validationErrors.extraFields(extraFields);
+        return next();
+    }
+
+    if (log === undefined && winner === undefined) {
+        req.context.validationError = validationErrors.noFieldsToUpdate();
+        return next();
+    }
+
+    if (log !== undefined && !Array.isArray(log)) {
+        req.context.validationError = validationErrors.invalidLog();
+        return next();
+    }
+
+    next();
+};
+
+export { createFightValid, updateFightValid };
